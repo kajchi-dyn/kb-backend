@@ -1,8 +1,10 @@
 from dotenv import load_dotenv
 load_dotenv() # loads vars from .env file
-from flask import Flask
+from flask import Flask, request
 from openai import OpenAI
 import kbsecrets # kb means those are mine secrets, you already know the normal "secrets" the code is online "pip install python-secrets" 
+import kbsecrets_unknown as questions
+
 
 app = Flask(__name__)
 
@@ -16,17 +18,67 @@ def hello():
     return kbsecrets.dyn + " " + kbsecrets.code
 
 
+@app.route('/questions')
+def question():
+    start = 0 if request.args.get("start") is None else int(request.args.get("start"))
+    return questions.get_questions_eng(10, start)
+
+
+@app.route('/questions_translated')
+def questions_translated():
+    start = 0 if request.args.get("start") is None else int(request.args.get("start"))
+    return questions.get_questions_eng(10, start)
+
+@app.route('/back2')
+def back2():
+    start = 0 if request.args.get("start") is None else int(request.args.get("start"))
+    quests = questions.get_questions_eng(10, start)
+
+
+    qs = [i[1] for i in quests]
+    print(",\n".join(qs))
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": """
+                Translate all the questions into Polish.
+            """},
+            {"role": "user", "content": ",\n".join(qs)}
+        ],
+        temperature=0.5,
+        max_tokens=1024
+    )
+
+    translated = completion.choices[0].message.content
+    return translated.split(",\n")
+
 @app.route('/back')
 def hello_back():
     completion = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "user", "content": "Say something random"}
+            {"role": "system", "content": """
+                Translate all the questions into Tamil.
+            """},
+            {"role": "user", "content": """
+                How many questions are there?,
+                Do those questions ever end?,
+                Do you know what infinity is?,
+                How many questions are there?,
+                I have no idea what I am doing?,
+                Why do I keep refreshing the page?,
+                Are there more quesions?,
+                Are there more quesions?,
+                Are there more quesions?,
+                ...?,
+            """}
         ],
         temperature=0.5,
         max_tokens=1024
     )
-    return "Hello back? " + str(completion.choices[0].message)
+
+    translated = completion.choices[0].message.content
+    return translated.split(",\n")
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')

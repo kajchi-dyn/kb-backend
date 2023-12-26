@@ -4,24 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
     <title>Bootstrap List Example</title>
 </head>
 <body>
 
-<div class="container mt-5">
-    <h1>List of questions that you can ask</h1>
-    <ul class="list-group">
-        <li class="list-group-item">Item 1</li>
-        <li class="list-group-item">Item 2</li>
-        <li class="list-group-item">Item 3</li>
-        <!-- Add more list items as needed -->
-    </ul>
+<div id="loginform" class="wrapper fadeInDown">
+    <div id="formContent">
+        <!-- Tabs Titles -->
+        
+        <!-- Login Form -->
+        <form>
+        <input type="text" id="login" class="fadeIn second" name="login" placeholder="username">
+        <input type="submit" class="fadeIn fourth" value="Enter">
+        </form>
+    
+    </div>
 </div>
 
+<div class="container mt-5">
+    <h1>Ask a bot a question</h1>
+
+    <h1>List of questions that you can ask</h1>
+    <ul id="questions" class="list-group">
+        <!-- Add more list items as needed -->
+    </ul>
+    <div id="loading">Loading ...</div>
+</div>
+
+
 <!-- Bootstrap JS (Optional) -->
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+
+<script>
+
+
+
+    get_context_class = function(question_context) {
+        console.log(question_context)
+        if (question_context === "good") return "list-group-item-success"
+        if (question_context === "med") return "list-group-item-warning"
+        if (question_context === "bad") return "list-group-item-danger"
+        if (question_context === "inf") return "list-group-item-info"
+    
+        return "list-group-item-info"
+    }
+
+    let start = 0;
+    load_questions = function() {
+        $.get('/questions?start=' + start,
+            function(questions) {
+                start += questions.length;
+
+                for (question of questions) {
+                    context_class = get_context_class(question[0]);
+                    $('#questions').append(`
+                    <li class='list-group-item list-group-item-action `+context_class+`'>` + question[1] + `</li>
+                    `);
+                }
+                $('#loading').hide();
+            }
+        );
+        
+    }
+
+    
+    $(document).ready(function() {
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const myParam = urlParams.get('login');
+        if (myParam) {
+            $('#loginform').hide();
+        }
+
+        load_questions()
+        load_questions()
+        load_questions()
+
+        var win = $(window);
+    
+        // Each time the user scrolls
+        win.scroll(function() {
+            // End of the document reached?
+            if ($(document).height() - win.height() == win.scrollTop()) {
+                load_questions()
+                
+            }
+        });
+    });
+
+</script>
 
 </body>
 </html>
